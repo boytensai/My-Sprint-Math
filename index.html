@@ -239,12 +239,16 @@
   }
   .diff-btn {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     font-size: 0.85rem;
-    padding: 11px 0;
+    padding: 9px 4px;
     border-radius: 10px;
     border: 1px solid var(--line);
     background: rgba(255,255,255,0.02);
@@ -258,6 +262,20 @@
     background: var(--amber-soft);
     border-color: var(--amber);
     color: var(--amber);
+  }
+  .diff-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .diff-btn:disabled:hover { border-color: var(--line); color: var(--ink-dim); }
+  .diff-req {
+    font-family: var(--font-body);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    line-height: 1.2;
   }
 
   .mode-tag {
@@ -534,9 +552,17 @@
 
       <p class="field-label">Difficulty</p>
       <div class="diff-row" id="diffRow" role="group" aria-label="Difficulty">
-        <button class="diff-btn" data-diff="easy">Easy</button>
-        <button class="diff-btn" data-diff="medium">Medium</button>
-        <button class="diff-btn" data-diff="hard">Hard</button>
+        <button class="diff-btn" data-diff="easy">
+          <span>Easy</span>
+        </button>
+        <button class="diff-btn" data-diff="medium">
+          <span>Medium</span>
+          <span class="diff-req"></span>
+        </button>
+        <button class="diff-btn" data-diff="hard">
+          <span>Hard</span>
+          <span class="diff-req"></span>
+        </button>
       </div>
 
       <div class="lb-panel" id="lbPreviewPanel">
@@ -681,9 +707,9 @@
   // ============================================================
 
   var DIFFS = {
-    easy: { label: "Easy", addMin: 1, addMax: 12, subMin: 5, subMax: 20 },
-    medium: { label: "Medium", addMin: 2, addMax: 40, subMin: 10, subMax: 60 },
-    hard: { label: "Hard", addMin: 25, addMax: 99, subMin: 50, subMax: 150 }
+    easy: { label: "Easy", addMin: 1, addMax: 12, subMin: 5, subMax: 20, unlockFrom: null, unlockScore: 0 },
+    medium: { label: "Medium", addMin: 2, addMax: 40, subMin: 10, subMax: 60, unlockFrom: "easy", unlockScore: 30 },
+    hard: { label: "Hard", addMin: 25, addMax: 99, subMin: 50, subMax: 150, unlockFrom: "medium", unlockScore: 20 }
   };
   var ROUND_SECONDS = 60;
   var BEST_KEY = "sprintMath.highScores";
@@ -898,12 +924,29 @@
     if (lastRound) submitScore(lastRound.diff, lastRound.name, lastRound.score);
   });
 
+  function isUnlocked(d) {
+    var cfg = DIFFS[d];
+    if (!cfg.unlockFrom) return true;
+    return bests[cfg.unlockFrom] >= cfg.unlockScore;
+  }
+
   function selectDifficulty(d) {
+    if (!isUnlocked(d)) d = "easy";
     difficulty = d;
     saveDifficulty(d);
     var buttons = diffRow.querySelectorAll(".diff-btn");
     for (var i = 0; i < buttons.length; i++) {
-      buttons[i].classList.toggle("active", buttons[i].getAttribute("data-diff") === d);
+      var btn = buttons[i];
+      var bd = btn.getAttribute("data-diff");
+      var cfg = DIFFS[bd];
+      var unlocked = isUnlocked(bd);
+      btn.classList.toggle("active", bd === d);
+      btn.classList.toggle("locked", !unlocked);
+      btn.disabled = !unlocked;
+      var reqEl = btn.querySelector(".diff-req");
+      if (reqEl) {
+        reqEl.textContent = unlocked ? "" : ("Score " + cfg.unlockScore + " in " + DIFFS[cfg.unlockFrom].label);
+      }
     }
     startBest.textContent = bests[d] > 0 ? bests[d] : "—";
     watchLeaderboard(d);
@@ -911,7 +954,7 @@
 
   diffRow.addEventListener("click", function (e) {
     var btn = e.target.closest(".diff-btn");
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     selectDifficulty(btn.getAttribute("data-diff"));
   });
 
@@ -1037,6 +1080,7 @@
       bests[diff] = state.correct;
       saveBests(bests);
       best = state.correct;
+      selectDifficulty(diff);
     }
 
     endModeTag.textContent = DIFFS[diff].label + " Mode";
