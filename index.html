@@ -188,17 +188,6 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
-  .best-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 26px;
-    font-family: var(--font-mono);
-  }
-  .best-row .stat-label { margin: 0; }
-  .best-row .stat-value { font-size: 1.3rem; }
-
   /* difficulty + name */
 
   .field-label {
@@ -571,10 +560,6 @@
         <p class="lb-empty" id="lbPreviewEmpty">No runs yet — be the first.</p>
       </div>
 
-      <div class="best-row">
-        <p class="stat-label">Best (This Device)</p>
-        <p class="stat-value" id="startBest">—</p>
-      </div>
       <button class="btn" id="startBtn">Start</button>
     </section>
 
@@ -633,10 +618,6 @@
         <div class="stat">
           <p class="stat-label">Accuracy</p>
           <p class="stat-value" id="accuracy">0%</p>
-        </div>
-        <div class="stat">
-          <p class="stat-label">Device Best</p>
-          <p class="stat-value" id="endBest">0</p>
         </div>
       </div>
 
@@ -842,7 +823,6 @@
 
   var startBtn = document.getElementById("startBtn");
   var againBtn = document.getElementById("againBtn");
-  var startBest = document.getElementById("startBest");
   var nameInput = document.getElementById("playerName");
   var diffRow = document.getElementById("diffRow");
   var modeTag = document.getElementById("modeTag");
@@ -857,7 +837,6 @@
   var liveStatus = document.getElementById("liveStatus");
   var finalScoreEl = document.getElementById("finalScore");
   var accuracyEl = document.getElementById("accuracy");
-  var endBestEl = document.getElementById("endBest");
   var newBestBadge = document.getElementById("newBestBadge");
   var lbPreviewMode = document.getElementById("lbPreviewMode");
   var lbPreviewList = document.getElementById("lbPreviewList");
@@ -948,7 +927,6 @@
         reqEl.textContent = unlocked ? "" : ("Score " + cfg.unlockScore + " in " + DIFFS[cfg.unlockFrom].label);
       }
     }
-    startBest.textContent = bests[d] > 0 ? bests[d] : "—";
     watchLeaderboard(d);
   }
 
@@ -1074,12 +1052,10 @@
   function endRound() {
     clearInterval(timerId);
     var diff = difficulty;
-    var best = bests[diff];
-    var isNewBest = state.correct > best;
+    var isNewBest = state.correct > bests[diff];
     if (isNewBest) {
       bests[diff] = state.correct;
       saveBests(bests);
-      best = state.correct;
       selectDifficulty(diff);
     }
 
@@ -1087,7 +1063,6 @@
     finalScoreEl.textContent = state.correct;
     var acc = state.attempted ? Math.round((state.correct / state.attempted) * 100) : 0;
     accuracyEl.textContent = acc + "%";
-    endBestEl.textContent = best;
     newBestBadge.style.display = isNewBest && state.correct > 0 ? "inline-block" : "none";
 
     showScreen("end");
