@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprint Math</title>
+<meta name="description" content="A 60-second mental math sprint. Add and subtract as fast as you can and climb the leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<!--
+  ADSENSE (disabled by default — see SETUP.md).
+  Once your AdSense account is approved, uncomment this tag and put your
+  publisher ID (ca-pub-XXXXXXXXXXXXXXXX) in place of ca-pub-XXXXXXXXXXXXXXXX below.
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+-->
+
+<style>
+  :root {
+    --bg: #0d1017;
+    --panel: #171b24;
+    --panel-2: #1b2130;
+    --line: #262c3a;
+    --line-bright: #333c50;
+    --ink: #eef1f6;
+    --ink-dim: #8993a8;
+    --ink-faint: #545d70;
+    --amber: #ffb020;
+    --amber-soft: rgba(255, 176, 32, 0.14);
+    --amber-ink: #241804;
+    --good: #3ddc84;
+    --good-soft: rgba(61, 220, 132, 0.14);
+    --bad: #ff5d5d;
+    --bad-soft: rgba(255, 93, 93, 0.14);
+    --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+    --font-mono: 'Space Mono', 'Courier New', monospace;
+    --font-body: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255,176,32,0.07), transparent 60%),
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 32px 16px;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .board {
+    position: relative;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line-bright);
+    border-radius: 18px;
+    padding: 30px 26px 26px;
+    box-shadow:
+      0 30px 60px -30px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    overflow: hidden;
+  }
+
+  .board::before,
+  .board::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 6px;
+    background-image: repeating-linear-gradient(90deg, var(--amber) 0 16px, transparent 16px 32px);
+    opacity: 0.16;
+  }
+  .board::before { top: 0; }
+  .board::after { bottom: 0; }
+
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    text-align: center;
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: clamp(2.1rem, 9vw, 2.75rem);
+    text-align: center;
+    margin: 0 0 10px;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  .lede {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--ink-dim);
+    text-align: center;
+    max-width: 30ch;
+    margin: 0 auto 26px;
+  }
+
+  /* ---- shared bits ---- */
+
+  .hidden { display: none !important; }
+
+  .btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 1.05rem;
+    border: none;
+    border-radius: 999px;
+    padding: 16px 20px;
+    width: 100%;
+    cursor: pointer;
+    background: var(--amber);
+    color: var(--amber-ink);
+    box-shadow: 0 12px 24px -10px rgba(255,176,32,0.45);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 28px -10px rgba(255,176,32,0.55); }
+  .btn:active { transform: translateY(0); }
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--amber);
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .stat {
+    flex: 1;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 4px;
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.6rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .stat-value.time { color: var(--amber); }
+  .stat-value.time.urgent { color: var(--bad); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .stat-value.time.urgent { animation: pulse 1s ease-in-out infinite; }
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  /* ---- screens ---- */
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .best-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 26px;
+    font-family: var(--font-mono);
+  }
+  .best-row .stat-label { margin: 0; }
+  .best-row .stat-value { font-size: 1.3rem; }
+
+  /* difficulty + name */
+
+  .field-label {
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: center;
+    margin: 0 0 8px;
+  }
+
+  .name-input {
+    display: block;
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--ink);
+    margin-bottom: 22px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .name-input::placeholder { color: var(--ink-faint); }
+  .name-input:focus {
+    outline: none;
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-soft);
+  }
+  .name-input.invalid { border-color: var(--bad); }
+
+  .diff-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .diff-btn {
+    flex: 1;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 11px 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .diff-btn:hover { border-color: var(--line-bright); color: var(--ink); }
+  .diff-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--amber); }
+  .diff-btn.active {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .mode-tag {
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+
+  /* leaderboard */
+
+  .lb-panel { margin-bottom: 22px; }
+  .lb-mode-accent { color: var(--amber); }
+  .lb-list {
+    list-style: none;
+    margin: 0 0 4px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+  }
+  .lb-rank {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    width: 1.8em;
+    flex-shrink: 0;
+  }
+  .lb-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lb-score {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .lb-row.me {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+  }
+  .lb-row.me .lb-name,
+  .lb-row.me .lb-score,
+  .lb-row.me .lb-rank {
+    color: var(--amber);
+  }
+  .lb-empty {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    padding: 10px 0;
+    margin: 0 0 4px;
+  }
+  .lb-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    margin-top: 4px;
+  }
+  .lb-retry {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    background: none;
+    border: 1px solid var(--line-bright);
+    color: var(--amber);
+    padding: 5px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .lb-retry:hover { border-color: var(--amber); }
+
+  /* problem */
+
+  .problem-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .problem-card.flash-good { background: var(--good-soft); border-color: var(--good); }
+  .problem-card.flash-bad { background: var(--bad-soft); border-color: var(--bad); }
+
+  .problem-text {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 8vw, 2.3rem);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  #answerInput {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 8vw, 2.3rem);
+    width: 3.6ch;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid var(--amber);
+    color: var(--amber);
+    text-align: center;
+    padding: 0 0 2px;
+    caret-color: var(--amber);
+  }
+  #answerInput:focus {
+    outline: none;
+    border-bottom-color: var(--ink);
+  }
+  #answerInput:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--amber-soft);
+    border-radius: 4px;
+  }
+
+  .streak-note {
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--amber);
+    min-height: 1.4em;
+    margin: 0 0 16px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .streak-note.show { opacity: 1; }
+
+  /* keypad */
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .key {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.15rem;
+    padding: 14px 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.12s ease, transform 0.08s ease;
+  }
+  .key:hover { background: rgba(255,255,255,0.06); }
+  .key:active { transform: scale(0.96); }
+  .key:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--amber); }
+  .key.enter { background: var(--amber); color: var(--amber-ink); border-color: var(--amber); }
+  .key.enter:hover { background: #ffc04d; }
+  .key.back { color: var(--ink-dim); }
+
+  /* results */
+
+  .result-score {
+    text-align: center;
+    margin: 4px 0 6px;
+  }
+  .result-score .num {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 4.2rem;
+    line-height: 1;
+    color: var(--amber);
+    font-variant-numeric: tabular-nums;
+  }
+  .result-score .label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  .new-best {
+    display: inline-block;
+    margin: 10px auto 0;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber-ink);
+    background: var(--amber);
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .new-best-wrap { text-align: center; min-height: 30px; margin-bottom: 18px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .new-best { animation: badge-in 0.4s ease; }
+  }
+  @keyframes badge-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .site-footer {
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    text-align: center;
+  }
+  .site-footer a { color: var(--ink-dim); }
+
+  .ad-slot {
+    width: 100%;
+    max-width: 460px;
+    min-height: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="app-root">
+  <p class="eyebrow">60-Second Sprint</p>
+  <h1>Sprint Math</h1>
+  <div class="board">
+
+    <!-- START -->
+    <section class="screen active" id="screen-start">
+      <p class="lede">Add and subtract as fast as you can. One problem at a time — every second counts.</p>
+
+      <p class="field-label">Player Name</p>
+      <input id="playerName" class="name-input" type="text" maxlength="20" autocomplete="off" placeholder="Your name" aria-label="Player name" />
+
+      <p class="field-label">Difficulty</p>
+      <div class="diff-row" id="diffRow" role="group" aria-label="Difficulty">
+        <button class="diff-btn" data-diff="easy">Easy</button>
+        <button class="diff-btn" data-diff="medium">Medium</button>
+        <button class="diff-btn" data-diff="hard">Hard</button>
+      </div>
+
+      <div class="lb-panel" id="lbPreviewPanel">
+        <p class="field-label">Leaderboard · <span class="lb-mode-accent" id="lbPreviewMode">Medium</span></p>
+        <ol class="lb-list hidden" id="lbPreviewList" aria-label="Leaderboard"></ol>
+        <p class="lb-empty" id="lbPreviewEmpty">No runs yet — be the first.</p>
+      </div>
+
+      <div class="best-row">
+        <p class="stat-label">Best (This Device)</p>
+        <p class="stat-value" id="startBest">—</p>
+      </div>
+      <button class="btn" id="startBtn">Start</button>
+    </section>
+
+    <!-- PLAYING -->
+    <section class="screen" id="screen-play">
+      <p class="mode-tag" id="modeTag">Medium</p>
+      <div class="stat-row">
+        <div class="stat">
+          <p class="stat-label">Time</p>
+          <p class="stat-value time" id="timeLeft">1:00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Score</p>
+          <p class="stat-value" id="liveScore">0</p>
+        </div>
+      </div>
+
+      <div class="problem-card" id="problemCard">
+        <span class="problem-text" id="problemText">— + —</span>
+        <span class="problem-text">=</span>
+        <input id="answerInput" type="text" inputmode="numeric" autocomplete="off" aria-label="Your answer" maxlength="3" />
+      </div>
+
+      <p class="streak-note" id="streakNote">Streak ×3</p>
+
+      <div class="keypad" id="keypad" aria-label="Number pad">
+        <button class="key" data-k="1">1</button>
+        <button class="key" data-k="2">2</button>
+        <button class="key" data-k="3">3</button>
+        <button class="key" data-k="4">4</button>
+        <button class="key" data-k="5">5</button>
+        <button class="key" data-k="6">6</button>
+        <button class="key" data-k="7">7</button>
+        <button class="key" data-k="8">8</button>
+        <button class="key" data-k="9">9</button>
+        <button class="key back" data-k="back">⌫</button>
+        <button class="key" data-k="0">0</button>
+        <button class="key enter" data-k="enter">↵</button>
+      </div>
+
+      <p class="sr-only" id="liveStatus" aria-live="polite"></p>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="screen" id="screen-end">
+      <p class="eyebrow" style="margin-bottom:0;">Time's Up</p>
+      <p class="mode-tag" id="endModeTag">Medium</p>
+      <div class="result-score">
+        <div class="num" id="finalScore">0</div>
+        <p class="label">Correct Answers</p>
+      </div>
+      <div class="new-best-wrap">
+        <span class="new-best" id="newBestBadge" style="display:none;">New Best</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <p class="stat-label">Accuracy</p>
+          <p class="stat-value" id="accuracy">0%</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Device Best</p>
+          <p class="stat-value" id="endBest">0</p>
+        </div>
+      </div>
+
+      <div class="lb-panel" id="lbResultsPanel">
+        <p class="field-label">Leaderboard · <span class="lb-mode-accent" id="lbResultsMode">Medium</span></p>
+        <ol class="lb-list hidden" id="lbResultsList" aria-label="Leaderboard"></ol>
+        <p class="lb-empty hidden" id="lbResultsEmpty">No runs yet — be the first.</p>
+        <div class="lb-status-row">
+          <span id="lbStatusText" aria-live="polite"></span>
+          <button class="lb-retry hidden" id="lbRetryBtn" type="button">Retry</button>
+        </div>
+      </div>
+
+      <button class="btn" id="againBtn">Run It Back</button>
+    </section>
+
+  </div>
+</div>
+
+<!--
+  AD SLOT (disabled by default — see SETUP.md).
+  Once AdSense is approved and you've enabled the script tag in <head>,
+  replace this comment with your <ins class="adsbygoogle"> ad unit code,
+  e.g.:
+
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+-->
+<div class="ad-slot" id="adSlot"></div>
+
+<p class="site-footer">Sprint Math — a 60-second mental math sprint.</p>
+
+<!--
+  TIP JAR (Ko-fi floating button).
+  Replace "yourusername" below with your own Ko-fi username
+  (create one free at https://ko-fi.com) to enable the button.
+-->
+<script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
+<script>
+  (function () {
+    var KOFI_USERNAME = "yourusername";
+    if (KOFI_USERNAME === "yourusername" || !window.kofiWidgetOverlay) return;
+    kofiWidgetOverlay.draw(KOFI_USERNAME, {
+      "type": "floating-chat",
+      "floating-chat.donateButton.text": "Support",
+      "floating-chat.donateButton.background-color": "#ffb020",
+      "floating-chat.donateButton.text-color": "#241804"
+    });
+  })();
+</script>
+
+<script type="module">
+  // ============================================================
+  // CONFIG — fill these in. See SETUP.md for step-by-step help.
+  // Leave FIREBASE_CONFIG.apiKey as-is to run with a local-only
+  // leaderboard (each device keeps its own top scores, nothing
+  // shared) until you've created a Firebase project.
+  // ============================================================
+  var FIREBASE_CONFIG = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  // ============================================================
+
+  var DIFFS = {
+    easy: { label: "Easy", addMin: 1, addMax: 12, subMin: 5, subMax: 20 },
+    medium: { label: "Medium", addMin: 2, addMax: 40, subMin: 10, subMax: 60 },
+    hard: { label: "Hard", addMin: 25, addMax: 99, subMin: 50, subMax: 150 }
+  };
+  var ROUND_SECONDS = 60;
+  var BEST_KEY = "sprintMath.highScores";
+  var DIFF_KEY = "sprintMath.difficulty";
+  var NAME_KEY = "sprintMath.playerName";
+  var LOCAL_LB_KEY = "sprintMath.localLeaderboard";
+
+  function loadBests() {
+    try {
+      var raw = localStorage.getItem(BEST_KEY);
+      if (!raw) return { easy: 0, medium: 0, hard: 0 };
+      var parsed = JSON.parse(raw);
+      return { easy: parsed.easy || 0, medium: parsed.medium || 0, hard: parsed.hard || 0 };
+    } catch (e) { return { easy: 0, medium: 0, hard: 0 }; }
+  }
+  function saveBests(obj) {
+    try { localStorage.setItem(BEST_KEY, JSON.stringify(obj)); } catch (e) {}
+  }
+  function loadDifficulty() {
+    try {
+      var v = localStorage.getItem(DIFF_KEY);
+      return DIFFS[v] ? v : "medium";
+    } catch (e) { return "medium"; }
+  }
+  function saveDifficulty(v) {
+    try { localStorage.setItem(DIFF_KEY, v); } catch (e) {}
+  }
+
+  function loadLocalLB() {
+    try {
+      var raw = localStorage.getItem(LOCAL_LB_KEY);
+      var parsed = raw ? JSON.parse(raw) : {};
+      return {
+        easy: Array.isArray(parsed.easy) ? parsed.easy : [],
+        medium: Array.isArray(parsed.medium) ? parsed.medium : [],
+        hard: Array.isArray(parsed.hard) ? parsed.hard : []
+      };
+    } catch (e) { return { easy: [], medium: [], hard: [] }; }
+  }
+  function addLocalEntry(diff, entry) {
+    var lb = loadLocalLB();
+    var list = lb[diff].concat([entry]);
+    list.sort(function (a, b) { return b.score - a.score || a.ts - b.ts; });
+    lb[diff] = list.slice(0, 10);
+    try { localStorage.setItem(LOCAL_LB_KEY, JSON.stringify(lb)); } catch (e) {}
+    return lb[diff];
+  }
+
+  // ---- Firebase (optional shared leaderboard) ----
+  var db = null;
+  var firebaseReady = false;
+  var fs = null; // holds { collection, addDoc, query, where, orderBy, limit, onSnapshot }
+
+  function initFirebase() {
+    if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey === "YOUR_API_KEY") {
+      return Promise.resolve(false);
+    }
+    return Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js")
+    ]).then(function (mods) {
+      var appMod = mods[0], fsMod = mods[1];
+      var app = appMod.initializeApp(FIREBASE_CONFIG);
+      db = fsMod.getFirestore(app);
+      fs = fsMod;
+      firebaseReady = true;
+      return true;
+    }).catch(function (err) {
+      console.error("Firebase init failed, falling back to local-only leaderboard.", err);
+      firebaseReady = false;
+      return false;
+    });
+  }
+
+  var unsubscribeLB = null;
+  function watchLeaderboard(diff) {
+    if (unsubscribeLB) { unsubscribeLB(); unsubscribeLB = null; }
+    if (!firebaseReady) {
+      renderAllLB(diff, loadLocalLB()[diff], true);
+      return;
+    }
+    var q = fs.query(
+      fs.collection(db, "scores"),
+      fs.where("difficulty", "==", diff),
+      fs.orderBy("score", "desc"),
+      fs.limit(5)
+    );
+    unsubscribeLB = fs.onSnapshot(q, function (snap) {
+      var entries = [];
+      snap.forEach(function (doc) { entries.push(doc.data()); });
+      renderAllLB(diff, entries, false);
+    }, function (err) {
+      console.error("Leaderboard read failed, showing local scores.", err);
+      renderAllLB(diff, loadLocalLB()[diff], true);
+    });
+  }
+
+  var lastRound = null; // { diff, name, score }
+  function submitScore(diff, name, score) {
+    var entry = { name: name, score: score, ts: Date.now(), difficulty: diff };
+    currentMeTs = entry.ts;
+    var localList = addLocalEntry(diff, entry);
+    lastRound = { diff: diff, name: name, score: score };
+    if (!firebaseReady) {
+      renderAllLB(diff, localList, true);
+      showLBStatus("local-only");
+      return;
+    }
+    showLBStatus("submitting");
+    fs.addDoc(fs.collection(db, "scores"), entry).then(function () {
+      showLBStatus("submitted");
+    }).catch(function (err) {
+      console.error("Score submit failed.", err);
+      renderAllLB(diff, localList, true);
+      showLBStatus("failed");
+    });
+  }
+
+  // ---- DOM refs ----
+  var screens = {
+    start: document.getElementById("screen-start"),
+    play: document.getElementById("screen-play"),
+    end: document.getElementById("screen-end")
+  };
+  function showScreen(name) {
+    Object.keys(screens).forEach(function (k) {
+      screens[k].classList.toggle("active", k === name);
+    });
+  }
+
+  var startBtn = document.getElementById("startBtn");
+  var againBtn = document.getElementById("againBtn");
+  var startBest = document.getElementById("startBest");
+  var nameInput = document.getElementById("playerName");
+  var diffRow = document.getElementById("diffRow");
+  var modeTag = document.getElementById("modeTag");
+  var endModeTag = document.getElementById("endModeTag");
+  var timeLeftEl = document.getElementById("timeLeft");
+  var liveScoreEl = document.getElementById("liveScore");
+  var problemText = document.getElementById("problemText");
+  var problemCard = document.getElementById("problemCard");
+  var answerInput = document.getElementById("answerInput");
+  var streakNote = document.getElementById("streakNote");
+  var keypad = document.getElementById("keypad");
+  var liveStatus = document.getElementById("liveStatus");
+  var finalScoreEl = document.getElementById("finalScore");
+  var accuracyEl = document.getElementById("accuracy");
+  var endBestEl = document.getElementById("endBest");
+  var newBestBadge = document.getElementById("newBestBadge");
+  var lbPreviewMode = document.getElementById("lbPreviewMode");
+  var lbPreviewList = document.getElementById("lbPreviewList");
+  var lbPreviewEmpty = document.getElementById("lbPreviewEmpty");
+  var lbResultsMode = document.getElementById("lbResultsMode");
+  var lbResultsList = document.getElementById("lbResultsList");
+  var lbResultsEmpty = document.getElementById("lbResultsEmpty");
+  var lbStatusText = document.getElementById("lbStatusText");
+  var lbRetryBtn = document.getElementById("lbRetryBtn");
+
+  var state = null;
+  var timerId = null;
+  var bests = loadBests();
+  var difficulty = loadDifficulty();
+  var currentMeTs = null;
+
+  function renderLBList(listEl, emptyEl, entries, meTs) {
+    listEl.innerHTML = "";
+    var top = (entries || []).slice(0, 5);
+    emptyEl.classList.toggle("hidden", top.length > 0);
+    listEl.classList.toggle("hidden", top.length === 0);
+    top.forEach(function (e, i) {
+      var li = document.createElement("li");
+      li.className = "lb-row" + (meTs && e.ts === meTs ? " me" : "");
+      var rank = document.createElement("span");
+      rank.className = "lb-rank";
+      rank.textContent = (i + 1) + ".";
+      var name = document.createElement("span");
+      name.className = "lb-name";
+      name.textContent = e.name;
+      var score = document.createElement("span");
+      score.className = "lb-score";
+      score.textContent = e.score;
+      li.appendChild(rank);
+      li.appendChild(name);
+      li.appendChild(score);
+      listEl.appendChild(li);
+    });
+  }
+
+  function renderAllLB(diff, entries, isLocal) {
+    var modeLabel = DIFFS[diff].label;
+    lbPreviewMode.textContent = modeLabel;
+    lbResultsMode.textContent = modeLabel;
+    renderLBList(lbPreviewList, lbPreviewEmpty, entries, currentMeTs);
+    renderLBList(lbResultsList, lbResultsEmpty, entries, currentMeTs);
+  }
+
+  function showLBStatus(kind) {
+    lbRetryBtn.classList.add("hidden");
+    if (kind === "submitting") {
+      lbStatusText.textContent = "Submitting to leaderboard…";
+    } else if (kind === "submitted") {
+      lbStatusText.textContent = "Saved to the leaderboard.";
+    } else if (kind === "local-only") {
+      lbStatusText.textContent = "Leaderboard sharing isn't set up yet — saved on this device only.";
+    } else {
+      lbStatusText.textContent = "Couldn't submit — saved on this device only.";
+      lbRetryBtn.classList.remove("hidden");
+    }
+  }
+
+  lbRetryBtn.addEventListener("click", function () {
+    if (lastRound) submitScore(lastRound.diff, lastRound.name, lastRound.score);
+  });
+
+  function selectDifficulty(d) {
+    difficulty = d;
+    saveDifficulty(d);
+    var buttons = diffRow.querySelectorAll(".diff-btn");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle("active", buttons[i].getAttribute("data-diff") === d);
+    }
+    startBest.textContent = bests[d] > 0 ? bests[d] : "—";
+    watchLeaderboard(d);
+  }
+
+  diffRow.addEventListener("click", function (e) {
+    var btn = e.target.closest(".diff-btn");
+    if (!btn) return;
+    selectDifficulty(btn.getAttribute("data-diff"));
+  });
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function nextProblem() {
+    var cfg = DIFFS[difficulty];
+    var op, a, b;
+    if (Math.random() < 0.5) {
+      op = "+";
+      a = randInt(cfg.addMin, cfg.addMax);
+      b = randInt(cfg.addMin, cfg.addMax);
+    } else {
+      op = "−";
+      a = randInt(cfg.subMin, cfg.subMax);
+      b = randInt(1, a);
+    }
+    state.a = a;
+    state.b = b;
+    state.op = op;
+    state.answer = op === "+" ? a + b : a - b;
+    problemText.textContent = a + " " + op + " " + b;
+    answerInput.value = "";
+  }
+
+  function formatTime(s) {
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function updateStats() {
+    liveScoreEl.textContent = state.correct;
+    timeLeftEl.textContent = formatTime(state.timeLeft);
+    timeLeftEl.classList.toggle("urgent", state.timeLeft <= 10);
+  }
+
+  function flash(kind) {
+    problemCard.classList.remove("flash-good", "flash-bad");
+    void problemCard.offsetWidth;
+    problemCard.classList.add(kind === "good" ? "flash-good" : "flash-bad");
+    setTimeout(function () {
+      problemCard.classList.remove("flash-good", "flash-bad");
+    }, 260);
+  }
+
+  function submitAnswer() {
+    if (!state || answerInput.value === "") return;
+    var val = parseInt(answerInput.value, 10);
+    state.attempted++;
+    if (val === state.answer) {
+      state.correct++;
+      state.streak++;
+      flash("good");
+      liveStatus.textContent = "Correct.";
+      if (state.streak >= 3) {
+        streakNote.textContent = "Streak ×" + state.streak;
+        streakNote.classList.add("show");
+      }
+    } else {
+      state.streak = 0;
+      flash("bad");
+      liveStatus.textContent = "Not quite. The answer was " + state.answer + ".";
+      streakNote.classList.remove("show");
+    }
+    updateStats();
+    nextProblem();
+    answerInput.focus();
+  }
+
+  function typeDigit(d) {
+    if (answerInput.value.length >= 3) return;
+    answerInput.value += d;
+  }
+  function backspace() {
+    answerInput.value = answerInput.value.slice(0, -1);
+  }
+
+  keypad.addEventListener("click", function (e) {
+    var btn = e.target.closest(".key");
+    if (!btn) return;
+    var k = btn.getAttribute("data-k");
+    if (k === "enter") submitAnswer();
+    else if (k === "back") backspace();
+    else typeDigit(k);
+    answerInput.focus();
+  });
+
+  answerInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); submitAnswer(); }
+  });
+  answerInput.addEventListener("input", function () {
+    answerInput.value = answerInput.value.replace(/[^0-9]/g, "").slice(0, 3);
+  });
+
+  function tick() {
+    state.timeLeft--;
+    updateStats();
+    if (state.timeLeft <= 0) endRound();
+  }
+
+  function startRound(name) {
+    currentMeTs = null;
+    state = { playerName: name, correct: 0, attempted: 0, streak: 0, timeLeft: ROUND_SECONDS, a: 0, b: 0, op: "+", answer: 0 };
+    streakNote.classList.remove("show");
+    modeTag.textContent = DIFFS[difficulty].label + " Mode";
+    updateStats();
+    nextProblem();
+    showScreen("play");
+    answerInput.focus();
+    clearInterval(timerId);
+    timerId = setInterval(tick, 1000);
+  }
+
+  function endRound() {
+    clearInterval(timerId);
+    var diff = difficulty;
+    var best = bests[diff];
+    var isNewBest = state.correct > best;
+    if (isNewBest) {
+      bests[diff] = state.correct;
+      saveBests(bests);
+      best = state.correct;
+    }
+
+    endModeTag.textContent = DIFFS[diff].label + " Mode";
+    finalScoreEl.textContent = state.correct;
+    var acc = state.attempted ? Math.round((state.correct / state.attempted) * 100) : 0;
+    accuracyEl.textContent = acc + "%";
+    endBestEl.textContent = best;
+    newBestBadge.style.display = isNewBest && state.correct > 0 ? "inline-block" : "none";
+
+    showScreen("end");
+    submitScore(diff, state.playerName, state.correct);
+  }
+
+  startBtn.addEventListener("click", function () {
+    var name = nameInput.value.trim().slice(0, 20);
+    if (!name) {
+      nameInput.classList.add("invalid");
+      nameInput.focus();
+      return;
+    }
+    nameInput.classList.remove("invalid");
+    try { sessionStorage.setItem(NAME_KEY, name); } catch (e) {}
+    startRound(name);
+  });
+
+  againBtn.addEventListener("click", function () {
+    showScreen("start");
+    watchLeaderboard(difficulty);
+  });
+
+  nameInput.addEventListener("input", function () {
+    nameInput.classList.remove("invalid");
+  });
+  try { nameInput.value = sessionStorage.getItem(NAME_KEY) || ""; } catch (e) {}
+
+  initFirebase().then(function () {
+    selectDifficulty(difficulty);
+  });
+</script>
+</body>
+</html>
